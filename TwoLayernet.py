@@ -5,6 +5,9 @@ sys.path.append(os.pardir)
 from Chapter3 import sigmoid,softmax
 from Chapter4 import cross_entropy_error_onehot,numerical_gradient
 
+def sigmoid_grad(x):
+    return (1.0 - sigmoid(x)) * sigmoid(x)
+
 class TwoLayerNet():
 
     def __init__(self,input_size,hidden_size,output_size,weight_init_std=0.01):
@@ -49,5 +52,30 @@ class TwoLayerNet():
         grads['b1']=numerical_gradient(loss_W,self.params['b1'])
         grads['W2']=numerical_gradient(loss_W,self.params['W2'])
         grads['b2']=numerical_gradient(loss_W,self.params['b2'])
+
+        return grads
+    
+    def gradient(self, x, t):
+        W1, W2 = self.params['W1'], self.params['W2']
+        b1, b2 = self.params['b1'], self.params['b2']
+        grads = {}
+        
+        batch_num = x.shape[0]
+        
+        # forward
+        a1 = np.dot(x, W1) + b1
+        z1 = sigmoid(a1)
+        a2 = np.dot(z1, W2) + b2
+        y = softmax(a2)
+        
+        # backward
+        dy = (y - t) / batch_num
+        grads['W2'] = np.dot(z1.T, dy)
+        grads['b2'] = np.sum(dy, axis=0)
+        
+        dz1 = np.dot(dy, W2.T)
+        da1 = sigmoid_grad(a1) * dz1
+        grads['W1'] = np.dot(x.T, da1)
+        grads['b1'] = np.sum(da1, axis=0)
 
         return grads
